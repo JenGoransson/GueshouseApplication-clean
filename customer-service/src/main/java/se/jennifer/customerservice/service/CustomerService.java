@@ -7,7 +7,9 @@ import se.jennifer.customerservice.dto.CreateCustomerRequest;
 import se.jennifer.customerservice.dto.CustomerResponse;
 import se.jennifer.customerservice.dto.UpdateCustomerRequest;
 import se.jennifer.customerservice.error.BadRequest;
+import se.jennifer.customerservice.error.ConflictException;
 import se.jennifer.customerservice.error.NotFoundException;
+import se.jennifer.customerservice.error.ServiceUnavailableException;
 import se.jennifer.customerservice.model.Customer;
 import se.jennifer.customerservice.repository.CustomerRepo;
 
@@ -20,24 +22,28 @@ public class CustomerService {
     private final BookingClient bookingClient;
     private final PasswordEncoder passwordEncoder;
 
-    public CustomerService(CustomerRepo CustomerRepo, BookingClient bookingClient, PasswordEncoder passwordEncoder) {
-        this.customerRepo = CustomerRepo;
+    public CustomerService(CustomerRepo customerRepo, BookingClient bookingClient, PasswordEncoder passwordEncoder) {
+        this.customerRepo = customerRepo;
         this.bookingClient = bookingClient;
         this.passwordEncoder = passwordEncoder;
     }
 
     public List<CustomerResponse> getAllCustomers() {
-        return customerRepo.findAll().stream().map(this::toDTO).toList() ;
+        return customerRepo.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     public CustomerResponse getCustomerById(Long id) {
-        Customer customer = customerRepo.findById(id).orElseThrow(()
-                -> new NotFoundException("Customer with id " + id + " not found"));
+        Customer customer = customerRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer with id " + id + " not found"));
 
         return toDTO(customer);
     }
 
     public CustomerResponse createCustomer(CreateCustomerRequest request) {
+
         if (customerRepo.existsByEmail(request.email())) {
             throw new BadRequest("Customer with email " + request.email() + " already exists");
         }
@@ -47,62 +53,72 @@ public class CustomerService {
         customer.setLastName(request.lastName());
         customer.setEmail(request.email());
         customer.setPhoneNumber(request.phoneNumber());
-        String hashedPassword = passwordEncoder.encode(request.password());
-        customer.setPasswordHash(hashedPassword);
+        customer.setPasswordHash(passwordEncoder.encode(request.password()));
 
         try {
-            Customer savedCustomer = customerRepo.save(customer);
-            return toDTO(savedCustomer);
+            Customer saved = customerRepo.save(customer);
+            return toDTO(saved);
         } catch (DataIntegrityViolationException e) {
             throw new BadRequest("Customer with email " + request.email() + " already exists");
         }
     }
 
     public void deleteCustomer(Long id) {
-        Customer customer = customerRepo.findById(id).orElseThrow(()
-                -> new NotFoundException("Customer with id " + id + " not found"));
 
-        if (bookingClient.hasActiveBookings(id)) {
-            throw new BadRequest("Customer with id " + id + " has active bookings and cannot be deleted");
+        Customer customer = customerRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer with id " + id + " not found"));
+
+        boolean hasBookings;
+
+        try {
+            hasBookings = bookingClient.hasActiveBookings(id);
+        } catch (Exception e) {
+            throw new ServiceUnavailableException("Booking service is not available right now");
+        }
+
+        if (hasBookings) {
+            throw new ConflictException("Customer with id " + id + " has active bookings and cannot be deleted");
         }
 
         customerRepo.delete(customer);
     }
 
     public CustomerResponse updateCustomer(Long id, UpdateCustomerRequest request) {
-        Customer customer = customerRepo
-                .findById(id).orElseThrow(() -> new NotFoundException("Customer with id " + id + " not found"));
-        if (request.firstName() != null) {
-            customer.setFirstName(request.firstName());
-        }
-        if (request.lastName() != null) {
-            customer.setLastName(request.lastName());
-        }
-        if (request.phoneNumber() != null) {
-            customer.setPhoneNumber(request.phoneNumber());
-        }
+
+        Customer customer = customerRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("Customer with id " + id + " not found"));
+
+        if (request.firstName() != null) customer.setFirstName(request.firstName());
+        if (request.lastName() != null) customer.setLastName(request.lastName());
+        if (request.phoneNumber() != null) customer.setPhoneNumber(request.phoneNumber());
+
         if (request.email() != null) {
-            if (!request.email().equals(customer.getEmail()) && customerRepo.existsByEmail(request.email())) {
+            if (!request.email().equals(customer.getEmail()) &&
+                    customerRepo.existsByEmail(request.email())) {
                 throw new BadRequest("Customer with email " + request.email() + " already exists");
             }
             customer.setEmail(request.email());
         }
+
         if (request.password() != null) {
-            String hashedPassword = passwordEncoder.encode(request.password());
-            customer.setPasswordHash(hashedPassword);
+            customer.setPasswordHash(passwordEncoder.encode(request.password()));
         }
 
         try {
-            Customer savedCustomer = customerRepo.save(customer);
-            return toDTO(savedCustomer);
+            Customer saved = customerRepo.save(customer);
+            return toDTO(saved);
         } catch (DataIntegrityViolationException e) {
             throw new BadRequest("Could not update customer");
         }
     }
 
-    public CustomerResponse toDTO(Customer customer) {
-
-        return new CustomerResponse(customer.getId(), customer.getFirstName(), customer.getLastName(),
-                customer.getEmail(), customer.getPhoneNumber());
+    private CustomerResponse toDTO(Customer customer) {
+        return new CustomerResponse(
+                customer.getId(),
+                customer.getFirstName(),
+                customer.getLastName(),
+                customer.getEmail(),
+                customer.getPhoneNumber()
+        );
     }
 }

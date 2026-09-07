@@ -9,7 +9,7 @@ public class BookingClient {
     private final RestClient restClient;
 
     public BookingClient(RestClient.Builder builder) {
-        this.restClient = builder.baseUrl("http://localhost:8081").build();
+        this.restClient = builder.baseUrl("http://booking-service:8080").build();
     }
 
     public boolean hasActiveBookings(Long customerId) {
