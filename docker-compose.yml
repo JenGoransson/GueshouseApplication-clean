@@ -1,0 +1,45 @@
+services:
+
+
+  customer-db:
+    image: mysql:8
+    container_name: customer-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: customerdb
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3307:3306"
+    restart:
+      always
+
+  customer-service:
+    container_name: customer-service
+    build: ./CustomerService
+    ports:
+      - "8081:8081"
+    depends_on:
+      - customer-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://customer-db:3306/customerdb
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+
+  booking-db:
+    image: mysql:8
+    ports:
+      - "3309:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bookingdb
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+
+
+  booking-service:
+    build: ./booking-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - booking-db
