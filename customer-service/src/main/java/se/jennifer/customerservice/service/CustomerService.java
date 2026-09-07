@@ -43,10 +43,10 @@ public class CustomerService {
         }
 
         Customer customer = new Customer();
-        customer.setFirstName(request.firstname());
-        customer.setLastName(request.lastname());
+        customer.setFirstName(request.firstName());
+        customer.setLastName(request.lastName());
         customer.setEmail(request.email());
-        customer.setPhoneNumber(request.phone());
+        customer.setPhoneNumber(request.phoneNumber());
         String hashedPassword = passwordEncoder.encode(request.password());
         customer.setPasswordHash(hashedPassword);
 

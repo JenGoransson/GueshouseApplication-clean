@@ -49,8 +49,15 @@ if (registerForm) {
         const response = await fetch("http://localhost:8081/customers", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ firstname, lastname, email, phone, password })
+            body: JSON.stringify({
+                firstName: firstname,
+                lastName: lastname,
+                email: email,
+                phoneNumber: phone,
+                password: password
+            })
         });
+
 
         const errorMessage = document.getElementById("errorMessage");
         const successMessage = document.getElementById("successMessage");
