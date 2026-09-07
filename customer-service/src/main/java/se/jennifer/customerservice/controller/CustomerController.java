@@ -40,8 +40,11 @@ public class CustomerController {
         customerService.deleteCustomer(id);
     }
 
-    @PatchMapping("/{id}")
-    public CustomerResponse updateCustomer(@PathVariable Long id, @RequestBody UpdateCustomerRequest request) {
+    @PutMapping("/{id}")
+    public CustomerResponse updateCustomer(
+            @PathVariable Long id,
+            @RequestBody UpdateCustomerRequest request) {
         return customerService.updateCustomer(id, request);
     }
 }
+

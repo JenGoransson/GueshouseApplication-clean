@@ -6,37 +6,34 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import se.jennifer.customerservice.dto.LoginRequest;
-import se.jennifer.customerservice.dto.LoginResponse;
 import se.jennifer.customerservice.error.BadRequest;
 import se.jennifer.customerservice.model.Customer;
 import se.jennifer.customerservice.repository.CustomerRepo;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/customers")
 public class LoginController {
 
     private final CustomerRepo customerRepo;
     private final PasswordEncoder passwordEncoder;
-    private final JwTService jwTService;
 
-    public LoginController(CustomerRepo customerRepo, PasswordEncoder passwordEncoder, JwTService jwTService) {
+    public LoginController(CustomerRepo customerRepo, PasswordEncoder passwordEncoder) {
         this.customerRepo = customerRepo;
         this.passwordEncoder = passwordEncoder;
-        this.jwTService = jwTService;
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public Customer login(@RequestBody LoginRequest request) {
         Customer customer = customerRepo
-                .findByEmail(request.email()).orElseThrow(() -> new BadRequest("Invalid email or passowrd"));
+                .findByEmail(request.email())
+                .orElseThrow(() -> new BadRequest("Invalid email or password"));
 
         boolean passwordMatches = passwordEncoder.matches(request.password(), customer.getPasswordHash());
 
         if (!passwordMatches) {
             throw new BadRequest("Invalid email or password");
         }
-        String token = jwTService.generateToken(customer.getId(),customer.getEmail());
 
-        return new LoginResponse(token);
+        return customer; // frontend får kundobjektet direkt
     }
 }

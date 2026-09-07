@@ -66,7 +66,7 @@ public class BookingService {
         }
 
         //Hämtar kund via HTTP
-        String url = "http://customer-service:8081/customers/" + request.customerId();
+        String url = "http://localhost:8081/customers/" + request.customerId();
         CustomerDto customer = restTemplate.getForObject(url, CustomerDto.class);
 
         Booking booking = new Booking(
