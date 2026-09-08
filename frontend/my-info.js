@@ -116,7 +116,7 @@ document.getElementById("deleteBtn").addEventListener("click", async () => {
         }
 
     } catch {
-        showMessage(false, "Nätverksfel – kunde inte kontakta servern.");
+        showMessage(false, "Network error.");
     }
 });
 
