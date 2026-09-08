@@ -99,12 +99,27 @@ document.getElementById("deleteBtn").addEventListener("click", async () => {
             }, 2000);
         } else {
             const text = await response.text();
-            showMessage(false, text || "Cannot delete user.");
+
+            let prettyMessage = "Cannot delete user.";
+
+            if (text.includes("active bookings")) {
+                prettyMessage = "You can´t delete your account since you have active bookings.";
+            }
+            else if (text.includes("Booking service is not available")) {
+                prettyMessage = "The bookingservice couldnt be reached.";
+            }
+            else if (text.includes("not found")) {
+                prettyMessage = "Could not find user.";
+            }
+
+            showMessage(false, prettyMessage);
         }
+
     } catch {
-        showMessage(false, "Network error while deleting user.");
+        showMessage(false, "Network error.");
     }
 });
+
 
 document.getElementById("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem("customer");

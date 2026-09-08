@@ -26,12 +26,22 @@ if (loginForm) {
             const errorText = await response.text();
             const errorMessage = document.getElementById("errorMessage");
 
-            errorMessage.textContent = errorText;
+            // Visa snyggt felmeddelande istället för timestamp
+            if (errorText.includes("timestamp")) {
+                errorMessage.textContent = "Something went wrong.";
+            } else {
+                errorMessage.textContent = errorText;
+            }
+
             errorMessage.style.display = "block";
+
+            // Dölj felmeddelandet när användaren börjar skriva igen
+            document.getElementById("password").addEventListener("input", () => {
+                errorMessage.style.display = "none";
+            });
         }
     });
 }
-
 
 // REGISTER HANDLING
 const registerForm = document.getElementById("registerForm");
