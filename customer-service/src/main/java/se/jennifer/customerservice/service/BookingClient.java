@@ -16,7 +16,7 @@ public class BookingClient {
 
         try {
             Boolean resuilt = restClient.get().uri(
-                    "/bookings/customer/{customerId/active}", customerId).retrieve().body(Boolean.class);
+                    "/bookings/customer/{customerId}/active", customerId).retrieve().body(Boolean.class);
 
             return Boolean.TRUE.equals(resuilt);
         } catch (Exception e) {
