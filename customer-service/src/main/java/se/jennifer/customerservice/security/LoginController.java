@@ -1,14 +1,15 @@
 package se.jennifer.customerservice.security;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import se.jennifer.customerservice.dto.LoginRequest;
-import se.jennifer.customerservice.error.BadRequest;
 import se.jennifer.customerservice.model.Customer;
 import se.jennifer.customerservice.repository.CustomerRepo;
+import se.jennifer.customerservice.service.CustomerService;
+import se.jennifer.customerservice.dto.CreateCustomerRequest;
+import se.jennifer.customerservice.dto.CustomerResponse;
+import se.jennifer.customerservice.dto.LoginRequest;
+import se.jennifer.customerservice.error.BadRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/customers")
@@ -16,14 +17,16 @@ public class LoginController {
 
     private final CustomerRepo customerRepo;
     private final PasswordEncoder passwordEncoder;
+    private final CustomerService customerService;
 
-    public LoginController(CustomerRepo customerRepo, PasswordEncoder passwordEncoder) {
+    public LoginController(CustomerRepo customerRepo, PasswordEncoder passwordEncoder, CustomerService customerService) {
         this.customerRepo = customerRepo;
         this.passwordEncoder = passwordEncoder;
+        this.customerService = customerService;
     }
 
     @PostMapping("/login")
-    public Customer login(@RequestBody LoginRequest request) {
+    public CustomerResponse login(@RequestBody LoginRequest request) {
         Customer customer = customerRepo
                 .findByEmail(request.email())
                 .orElseThrow(() -> new BadRequest("Invalid email or password"));
@@ -33,7 +36,13 @@ public class LoginController {
         if (!passwordMatches) {
             throw new BadRequest("Invalid email or password");
         }
+        return new CustomerResponse(customer.getId(),customer.getFirstName(),
+                customer.getLastName(), customer.getEmail(), customer.getPhoneNumber());
+    }
 
-        return customer; // frontend får kundobjektet direkt
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CustomerResponse registerCustomer(@RequestBody CreateCustomerRequest request) {
+        return customerService.createCustomer(request);
     }
 }
