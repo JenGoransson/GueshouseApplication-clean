@@ -37,6 +37,12 @@ public class BookingController {
         return bookingService.getBookingsForCustomer(customerId);
     }
 
+    @GetMapping("/customer/{customerId}/active")
+    public boolean hasActiveBookings(@PathVariable Long customerId) {
+        return !bookingService.getBookingsForCustomer(customerId).isEmpty();
+    }
+
+
     @GetMapping("/room/{roomId}")
     public List<Booking>getBookingsForRoom(@PathVariable Long roomId){
         return bookingService.getBookingsForRoom(roomId);
