@@ -68,12 +68,16 @@ public class CustomerService {
         Customer customer = customerRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Customer with id " + id + " not found"));
 
-        boolean hasBookings;
+        Boolean hasBookings;
 
         try {
             hasBookings = bookingClient.hasActiveBookings(id);
+        } catch (ServiceUnavailableException e) {
+            // booking-service är verkligen nere
+            throw e;
         } catch (Exception e) {
-            throw new ServiceUnavailableException("Booking service is not available right now");
+            // något oväntat fel i bookingClient → logga men kasta inte 503
+            throw new RuntimeException("Unexpected error while checking bookings", e);
         }
 
         if (hasBookings) {
