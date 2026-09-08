@@ -23,7 +23,7 @@ class BookingIntegrationTest {
 
     @Test
     void shouldReturnRoomsSuccessfully() throws Exception {
-        // Test 1: Verifica que el endpoint para obtener habitaciones responda 200 OK
+
         mockMvc.perform(get("/api/rooms")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -31,7 +31,7 @@ class BookingIntegrationTest {
 
     @Test
     void shouldCreateBookingSuccessfully() throws Exception {
-        // Test 2: Simula la creación de una reserva (201 Created)
+
         String bookingJson = """
             {
                 "customerId": 1,
@@ -49,7 +49,7 @@ class BookingIntegrationTest {
 
     @Test
     void shouldReturnConflictWhenRoomIsDoubleBooked() throws Exception {
-        // Test 3: Verifica la lógica de negocio ante una duplicidad de fechas (409 Conflict)
+
         String doubleBookingJson = """
             {
                 "customerId": 2,
