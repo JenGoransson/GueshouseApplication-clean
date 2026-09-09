@@ -1,8 +1,9 @@
 package se.jennifer.bookingservice.booking.service;
 
 import jakarta.transaction.Transactional;
+import se.jennifer.bookingservice.error.ConflictException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import se.jennifer.bookingservice.booking.client.CustomerClient;
 import se.jennifer.bookingservice.booking.model.Booking;
 import se.jennifer.bookingservice.booking.model.BookingStatus;
 import se.jennifer.bookingservice.booking.model.CreateBookingRequest;
@@ -22,12 +23,13 @@ public class BookingService {
 
     private final BookingRepository bookingRepo;
     private final RoomService roomService;
-    private final RestTemplate restTemplate;
+    private final CustomerClient customerClient;
 
-    public BookingService(BookingRepository bookingRepo, RoomService roomService, RestTemplate restTemplate) {
+    public BookingService(BookingRepository bookingRepo, RoomService roomService, CustomerClient customerClient) {
+
         this.bookingRepo = bookingRepo;
         this.roomService = roomService;
-        this.restTemplate = restTemplate;
+        this.customerClient = customerClient;
     }
 
     public List<Booking> getAllBookings(){
@@ -62,12 +64,11 @@ public class BookingService {
         Room room = roomService.getRoomById(request.roomId());
 
         if (isRoomBooked(room.getId(), request.startDate(), request.endDate())) {
-            throw new BadRequest("Room is already booked between " + request.startDate() +  " and " + request.endDate());
+            throw new ConflictException("Room is already booked between " + request.startDate() +  " and " + request.endDate());
         }
 
         //Hämtar kund via HTTP
-        String url = "http://customer-service:8081/customers/" + request.customerId();
-        CustomerDto customer = restTemplate.getForObject(url, CustomerDto.class);
+        CustomerDto customer = customerClient.getCustomerById(request.customerId(), null);
 
         Booking booking = new Booking(
                 request.customerId(),
